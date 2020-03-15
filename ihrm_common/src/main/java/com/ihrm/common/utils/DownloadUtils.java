@@ -12,10 +12,14 @@ import java.net.URLEncoder;
 public class DownloadUtils {
     public void download(ByteArrayOutputStream byteArrayOutputStream, HttpServletResponse response, String returnName) throws IOException {
         response.setContentType("application/octet-stream");
+        System.out.println("returnName1=="+returnName);
         returnName = response.encodeURL(new String(returnName.getBytes(),"iso8859-1"));			//保存的文件名,必须和页面编码一致,否则乱码
+        System.out.println("returnName2=="+returnName);
         response.addHeader("Content-Disposition","attachment;filename=total.xls");
         response.setContentLength(byteArrayOutputStream.size());
         response.addHeader("Content-Length", "" + byteArrayOutputStream.size());
+        System.out.println("2======================");
+        System.out.println("Authorization======================"+response.getHeader("Authorization"));
         ServletOutputStream outputstream = response.getOutputStream();	//取得输出流
         byteArrayOutputStream.writeTo(outputstream);					//写到输出流
         byteArrayOutputStream.close();									//关闭

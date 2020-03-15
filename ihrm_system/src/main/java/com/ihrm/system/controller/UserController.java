@@ -6,6 +6,7 @@ import com.ihrm.common.entity.Result;
 import com.ihrm.common.entity.ResultCode;
 
 import com.ihrm.common.exception.CommonException;
+import com.ihrm.common.poi.ExcelImportUtil;
 import com.ihrm.common.utils.JwtUtils;
 import com.ihrm.common.utils.PermissionConstants;
 import com.ihrm.domain.system.Permission;
@@ -61,6 +62,15 @@ public class UserController extends BaseController {
     private DepartmentFeignClient departmentFeignClient;
 
 
+    @RequestMapping("/user/upload/{id}")
+    public Result upload(@PathVariable String id,@RequestParam(name="file") MultipartFile file ) throws IOException {
+        //1.调用service保存图片（获取到图片的访问地址（dataUrl | http地址））
+        String imgUrl = userService.uploadImage(id,file);
+        //2.返回数据
+        return new Result(ResultCode.SUCCESS,imgUrl);
+    }
+
+
     /**
      * 导入Excel，添加用户
      *  文件上传：springboot
@@ -68,25 +78,27 @@ public class UserController extends BaseController {
     @RequestMapping(value="/user/import",method = RequestMethod.POST)
     public Result importUser(@RequestParam(name="file") MultipartFile file) throws Exception {
         //1.解析Excel
-        //1.1.根据Excel文件创建工作簿
-        Workbook wb = new XSSFWorkbook(file.getInputStream());
-        //1.2.获取Sheet
-        Sheet sheet = wb.getSheetAt(0);//参数：索引
-        //1.3.获取Sheet中的每一行，和每一个单元格
-        //2.获取用户数据列表
-        List<User> list = new ArrayList<>();
-        System.out.println(sheet.getLastRowNum());
-        for (int rowNum = 1; rowNum<= sheet.getLastRowNum() ;rowNum ++) {
-            Row row = sheet.getRow(rowNum);//根据索引获取每一个行
-            Object [] values = new Object[row.getLastCellNum()];
-            for(int cellNum=1;cellNum< row.getLastCellNum(); cellNum ++) {
-                Cell cell = row.getCell(cellNum);
-                Object value = getCellValue(cell);
-                values[cellNum] = value;
-            }
-            User user = new User(values);
-            list.add(user);
-        }
+//        //1.1.根据Excel文件创建工作簿
+//        Workbook wb = new XSSFWorkbook(file.getInputStream());
+//        //1.2.获取Sheet
+//        Sheet sheet = wb.getSheetAt(0);//参数：索引
+//        //1.3.获取Sheet中的每一行，和每一个单元格
+//        //2.获取用户数据列表
+//        List<User> list = new ArrayList<>();
+//        System.out.println(sheet.getLastRowNum());
+//        for (int rowNum = 1; rowNum<= sheet.getLastRowNum() ;rowNum ++) {
+//            Row row = sheet.getRow(rowNum);//根据索引获取每一个行
+//            Object [] values = new Object[row.getLastCellNum()];
+//            for(int cellNum=1;cellNum< row.getLastCellNum(); cellNum ++) {
+//                Cell cell = row.getCell(cellNum);
+//                Object value = getCellValue(cell);
+//                values[cellNum] = value;
+//            }
+//            User user = new User(values);
+//            list.add(user);
+//        }
+
+        List<User> list = new ExcelImportUtil(User.class).readExcel(file.getInputStream(), 1, 1);
         //3.批量保存用户
         userService.saveAll(list,companyId,companyName);
 
